@@ -8,7 +8,6 @@ import {
   MapPin,
   X,
   Receipt,
-  Sparkles,
   ExternalLink,
 } from 'lucide-react';
 import { OrderDetails } from '../types';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Coffee, Flame, HeartHandshake, Sparkles, Award } from 'lucide-react';
+import { Coffee, Flame, HeartHandshake, Award } from 'lucide-react';
 import { CAFE_INFO } from '../data/menuData';
 
 export const CafeExperience: React.FC = () => {
@@ -10,7 +10,6 @@ export const CafeExperience: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center mb-8 sm:mb-16">
           <div className="lg:col-span-6 space-y-4 sm:space-y-5 text-left">
             <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-zinc-900/60 border border-white/10 text-[10px] sm:text-xs font-semibold text-[#C29B6B] uppercase tracking-wider sm:tracking-widest">
-              <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#C29B6B]" />
               <span>Our Philosophy</span>
             </div>
 

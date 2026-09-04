@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowDown, Sparkles, Zap, Coffee } from 'lucide-react';
+import { ArrowDown, Zap, Coffee } from 'lucide-react';
 import { isCafeOpen } from '../utils/cafeHelpers';
 import cafeInteriorImage from '../assets/images/cafe_interior_seating_1788540473948.jpg';
 
@@ -23,9 +23,8 @@ export const Hero: React.FC<HeroProps> = ({ onExploreMenu, onOpenBookTable, onGo
           <div className="lg:col-span-7 space-y-4 sm:space-y-6 text-left">
             {/* Status chip */}
             <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 rounded-full bg-zinc-900/60 border border-white/10 text-[10px] sm:text-xs font-medium text-[#C29B6B] tracking-wide">
-              <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#C29B6B]" />
-              <span className="uppercase tracking-wider sm:tracking-widest text-[9px] sm:text-[10px]">Artisanal Roastery & Bistro</span>
-              <span className="text-zinc-700">•</span>
+              <span className="uppercase tracking-wider sm:tracking-widest text-[9px] sm:text-[10px] font-semibold text-zinc-300">CAFE IS</span>
+              <span className="text-zinc-600">•</span>
               <span className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] uppercase tracking-wider border ${status.isOpen ? 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30' : 'bg-zinc-900 text-zinc-400 border-zinc-700'}`}>
                 <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
                 {status.isOpen ? 'Open Now' : 'Closed'}

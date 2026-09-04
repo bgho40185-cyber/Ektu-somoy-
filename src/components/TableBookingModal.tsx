@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Calendar, Clock, Users, Sparkles, CheckCircle2, MapPin } from 'lucide-react';
+import { X, Calendar, Clock, Users, CheckCircle2, MapPin } from 'lucide-react';
 import { CAFE_INFO } from '../data/menuData';
 import { saveReservationToFirestore } from '../firebase';
 

@@ -16,7 +16,6 @@ import {
   ChevronRight,
   Filter,
   ChefHat,
-  Sparkles,
   MapPin,
   Tag,
   Plus,
@@ -764,7 +763,6 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl bg-zinc-900/60 border border-white/10">
                 <div className="space-y-1">
                   <h3 className="text-sm sm:text-base font-medium text-white flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[#C29B6B]" />
                     <span>Offers & Video Deals Control Center</span>
                   </h3>
                   <p className="text-xs text-zinc-400">
@@ -885,7 +883,6 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                         <div>
                           <label className="text-xs font-semibold text-white flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5 text-[#C29B6B]" />
                             <span>Media Attachment (গ্যালারি থেকে ভিডিও বা ফটো)</span>
                           </label>
                           <p className="text-[11px] text-zinc-400">

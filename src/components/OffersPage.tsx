@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Tag,
-  Sparkles,
   Copy,
   Check,
   Clock,
@@ -168,7 +167,6 @@ export const OffersPage: React.FC<OffersPageProps> = ({
       {/* Header */}
       <div className="text-center max-w-2xl mx-auto space-y-2 sm:space-y-3">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-900/60 border border-white/10 text-[10px] sm:text-xs font-semibold text-[#C29B6B] uppercase tracking-widest">
-          <Sparkles className="w-3.5 h-3.5 text-[#C29B6B]" />
           <span>Exclusive Cafe Privileges</span>
         </div>
         <h1 className="text-2xl sm:text-4xl font-light tracking-tight text-[#E5E7EB]">

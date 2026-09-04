@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { X, Plus, Minus, Clock, Flame, Check, Sparkles } from 'lucide-react';
+import { X, Plus, Minus, Clock, Flame, Check } from 'lucide-react';
 import { MenuItem, CartItem, CartItemOption } from '../types';
 import { formatPrice } from '../utils/cafeHelpers';
 
@@ -152,7 +152,7 @@ export const ItemCustomizerModal: React.FC<ItemCustomizerModalProps> = ({
             </span>
             {item.isChefSpecial && (
               <span className="px-2.5 py-1 rounded-md text-[10px] font-semibold tracking-widest uppercase bg-[#C29B6B] text-black flex items-center gap-1">
-                <Sparkles className="w-3 h-3" /> Chef's Special
+                Chef's Special
               </span>
             )}
           </div>

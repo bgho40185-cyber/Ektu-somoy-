@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Plus, Sparkles, Clock, Flame, SlidersHorizontal } from 'lucide-react';
+import { Search, Plus, Clock, Flame, SlidersHorizontal } from 'lucide-react';
 import { MenuItem, DietaryPreference } from '../types';
 import { MENU_ITEMS, MENU_CATEGORIES } from '../data/menuData';
 import { formatPrice } from '../utils/cafeHelpers';
@@ -48,7 +48,6 @@ export const MenuSection: React.FC<MenuSectionProps> = ({ onSelectItem, onQuickA
       {/* Section Title */}
       <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10 space-y-2 sm:space-y-3">
         <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-zinc-900/60 border border-white/10 text-[10px] sm:text-xs font-semibold text-[#C29B6B] uppercase tracking-wider sm:tracking-widest">
-          <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#C29B6B]" />
           <span>Handcrafted Culinary Menu</span>
         </div>
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-light tracking-tight text-[#E5E7EB]">
@@ -124,7 +123,6 @@ export const MenuSection: React.FC<MenuSectionProps> = ({ onSelectItem, onQuickA
                   : 'bg-zinc-900/60 text-[#C29B6B] border-white/10 hover:border-[#C29B6B]/40'
               }`}
             >
-              <Sparkles className="w-3 h-3" />
               Chef's Specials
             </button>
           </div>
@@ -224,7 +222,7 @@ export const MenuSection: React.FC<MenuSectionProps> = ({ onSelectItem, onQuickA
 
                       {item.isChefSpecial && (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#C29B6B] text-black flex items-center gap-1">
-                          <Sparkles className="w-2.5 h-2.5" /> Chef's Pick
+                          Chef's Pick
                         </span>
                       )}
 

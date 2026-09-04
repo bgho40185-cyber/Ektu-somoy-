@@ -7,7 +7,6 @@ import {
   Banknote,
   CheckCircle2,
   Lock,
-  Sparkles,
   ArrowRight,
   ShieldCheck,
   AlertCircle,
@@ -392,7 +391,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     onClick={fillDemoCard}
                     className="text-xs text-[#C29B6B] hover:underline font-medium flex items-center gap-1 font-mono text-[11px]"
                   >
-                    <Sparkles className="w-3 h-3" /> Auto-Fill Demo Card
+                    Auto-Fill Demo Card
                   </button>
                 </div>
 
