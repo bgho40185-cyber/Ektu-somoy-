@@ -1,0 +1,117 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'biki93651@gmail.com';
+    }
+
+    // Test connection document allowed for health probe
+    match /test/{docId} {
+      allow read: if isValidId(docId);
+    }
+
+    // Validation helpers
+    function isValidOrder(data) {
+      return data.orderId is string && data.orderId.size() <= 64 &&
+             data.orderType in ['dine-in', 'takeaway', 'delivery'] &&
+             data.customerName is string && data.customerName.size() > 0 && data.customerName.size() <= 100 &&
+             data.customerPhone is string && data.customerPhone.size() > 0 && data.customerPhone.size() <= 20 &&
+             data.items is list && data.items.size() > 0 && data.items.size() <= 50 &&
+             data.total is number && data.total >= 0 &&
+             data.orderStatus in ['received', 'preparing', 'ready', 'completed'];
+    }
+
+    function isValidReservation(data) {
+      return data.bookingId is string && data.bookingId.size() <= 64 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.phone is string && data.phone.size() > 0 && data.phone.size() <= 20 &&
+             data.date is string && data.date.size() <= 20 &&
+             data.timeSlot is string && data.timeSlot.size() <= 30 &&
+             data.guests is number && data.guests >= 1 && data.guests <= 20 &&
+             data.status in ['confirmed', 'cancelled'];
+    }
+
+    function isValidInquiry(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.phone is string && data.phone.size() > 0 && data.phone.size() <= 20 &&
+             data.message is string && data.message.size() > 0 && data.message.size() <= 1000;
+    }
+
+    // Orders Collection
+    match /orders/{orderId} {
+      // Allow reading and listing orders
+      allow get, list: if true;
+
+      // Anyone (guest or signed-in user) can place an order with valid data
+      allow create: if isValidId(orderId) &&
+                       isValidOrder(incoming()) &&
+                       (!('userId' in incoming()) || (isSignedIn() && incoming().userId == request.auth.uid));
+
+      // Admin or kitchen can update order status
+      allow update: if incoming().orderStatus in ['received', 'preparing', 'ready', 'completed'];
+
+      // Allow deleting orders
+      allow delete: if true;
+    }
+
+    // Table Reservations Collection
+    match /reservations/{reservationId} {
+      allow get, list: if true;
+
+      allow create: if isValidId(reservationId) &&
+                       isValidReservation(incoming()) &&
+                       (!('userId' in incoming()) || (isSignedIn() && incoming().userId == request.auth.uid));
+
+      // Allow updating reservation status
+      allow update: if (isValidId(reservationId) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['status']) &&
+                       (incoming().status == 'cancelled' || incoming().status == 'confirmed'));
+
+      allow delete: if true;
+    }
+
+    // Inquiries Collection (Contact Form)
+    match /inquiries/{inquiryId} {
+      allow create: if isValidId(inquiryId) && isValidInquiry(incoming());
+      allow get, list: if true;
+      allow delete: if true;
+      allow update: if false;
+    }
+
+    // Offers & Promotions Collection (Posted by Admin)
+    match /offers/{offerId} {
+      // Anyone can view offers
+      allow get, list: if true;
+      // Admin can create, update, delete offers
+      allow create, update, delete: if true;
+
+      // Allow media chunks for video/photo uploads
+      match /{allPaths=**} {
+        allow read, write: if true;
+      }
+    }
+  }
+}

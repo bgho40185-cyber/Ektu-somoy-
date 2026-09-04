@@ -1,0 +1,456 @@
+import { MenuItem } from '../types';
+
+export const CAFE_INFO = {
+  name: 'Ektu Shomoy',
+  subtitle: 'A Little Time Cafe & Artisan Roastery',
+  tagline: 'Take a little time for great coffee, slow conversations, and handcrafted flavors.',
+  openingHours: '10:00 AM – 11:00 PM',
+  openingTime24: { open: 10, close: 23 }, // 10:00 to 23:00
+  days: 'Monday to Sunday (Open 7 Days)',
+  phone: '+91 98301 23456',
+  email: 'hello@ektushomoycafe.com',
+  address: 'Ektu Shomoy Cafe, Main Boulevard, Kolkata, West Bengal, India',
+  mapsUrl: 'https://maps.app.goo.gl/V3hdhEQfQvCBGTgG9',
+  upiId: 'ektushomoy@okicici',
+};
+
+export const MENU_CATEGORIES = [
+  'All Items',
+  'Artisan Coffee',
+  'Cold Brews & Frappes',
+  'Specialty Teas & Chai',
+  'Gourmet Sandwiches',
+  'Pizza & Pasta',
+  'Bakery & Desserts',
+  'Coolers & Refreshers',
+] as const;
+
+export const MENU_ITEMS: MenuItem[] = [
+  // --- Artisan Coffee ---
+  {
+    id: 'coffee-1',
+    name: 'Spanish Cortado Latte',
+    category: 'Artisan Coffee',
+    price: 240,
+    description: 'Double shot of dark roasted Arabica cut with textured steamed milk and a kiss of condensed milk.',
+    image: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    isChefSpecial: true,
+    isBestseller: true,
+    preparationTime: '5-7 mins',
+    calories: 140,
+    availableSizes: [
+      { name: 'Regular (240ml)', priceMultiplier: 1.0 },
+      { name: 'Grande (360ml)', priceMultiplier: 1.25 },
+    ],
+    customizations: [
+      {
+        title: 'Choice of Milk',
+        type: 'single',
+        options: [
+          { name: 'Full Cream Milk', additionalPrice: 0 },
+          { name: 'Oat Milk (Barista Edition)', additionalPrice: 40 },
+          { name: 'Almond Milk', additionalPrice: 40 },
+          { name: 'Soy Milk', additionalPrice: 30 },
+        ],
+      },
+      {
+        title: 'Espresso Boost',
+        type: 'single',
+        options: [
+          { name: 'Standard Double Shot', additionalPrice: 0 },
+          { name: 'Triple Shot Roast', additionalPrice: 50 },
+          { name: 'Decaf Blend', additionalPrice: 30 },
+        ],
+      },
+      {
+        title: 'Flavor Infusion',
+        type: 'multiple',
+        options: [
+          { name: 'Madagascar Vanilla Syrup', additionalPrice: 35 },
+          { name: 'Hazelnut Praline', additionalPrice: 35 },
+          { name: 'Salted Caramel Drizzle', additionalPrice: 35 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'coffee-2',
+    name: 'Classic Hazelnut Cappuccino',
+    category: 'Artisan Coffee',
+    price: 220,
+    description: 'Fresh espresso shot paired with silky microfoam, infused with toasted hazelnut extract and dusted with Dutch cocoa.',
+    image: 'https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    isBestseller: true,
+    preparationTime: '5 mins',
+    calories: 120,
+    availableSizes: [
+      { name: 'Regular (220ml)', priceMultiplier: 1.0 },
+      { name: 'Large (320ml)', priceMultiplier: 1.25 },
+    ],
+    customizations: [
+      {
+        title: 'Choice of Milk',
+        type: 'single',
+        options: [
+          { name: 'Fresh Dairy Milk', additionalPrice: 0 },
+          { name: 'Oat Milk', additionalPrice: 40 },
+          { name: 'Almond Milk', additionalPrice: 40 },
+        ],
+      },
+      {
+        title: 'Sweetness Level',
+        type: 'single',
+        options: [
+          { name: 'Unsweetened', additionalPrice: 0 },
+          { name: 'Mild Sweet', additionalPrice: 0 },
+          { name: 'Standard Sweet', additionalPrice: 0 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'coffee-3',
+    name: 'Pour-Over V60 Single Origin',
+    category: 'Artisan Coffee',
+    price: 260,
+    description: 'Precision manual pour-over using 100% Arabica estate beans with crisp notes of berries, jasmine, and caramel.',
+    image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    isChefSpecial: true,
+    preparationTime: '8 mins',
+    calories: 5,
+  },
+  {
+    id: 'coffee-4',
+    name: 'Dark Mocha Supreme',
+    category: 'Artisan Coffee',
+    price: 250,
+    description: 'Belgian dark chocolate ganache blended with double espresso and velvety milk, topped with whipped cream curls.',
+    image: 'https://images.unsplash.com/photo-1578314675249-a6910f80cc4e?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    preparationTime: '6 mins',
+    calories: 230,
+    availableSizes: [
+      { name: 'Regular', priceMultiplier: 1.0 },
+      { name: 'Grande', priceMultiplier: 1.3 },
+    ],
+  },
+
+  // --- Cold Brews & Frappes ---
+  {
+    id: 'cold-1',
+    name: 'Vanilla Sweet Cream Cold Brew',
+    category: 'Cold Brews & Frappes',
+    price: 260,
+    description: '18-hour slow steeped cold brew poured over ice and crowned with a layer of handcrafted vanilla sweet cream.',
+    image: 'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    isBestseller: true,
+    preparationTime: '3 mins',
+    calories: 110,
+    customizations: [
+      {
+        title: 'Sweet Cream Options',
+        type: 'single',
+        options: [
+          { name: 'Classic Vanilla Sweet Cream', additionalPrice: 0 },
+          { name: 'Salted Caramel Cold Foam', additionalPrice: 25 },
+          { name: 'Pure Black (No Cream)', additionalPrice: 0 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'cold-2',
+    name: 'Roasted Hazelnut Coffee Frappe',
+    category: 'Cold Brews & Frappes',
+    price: 280,
+    description: 'Thick creamy blended frappe with espresso, hazelnut butter, rich cream, and crushed butter waffle crumbles.',
+    image: 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    isBestseller: true,
+    preparationTime: '6 mins',
+    calories: 320,
+    availableSizes: [
+      { name: 'Regular (350ml)', priceMultiplier: 1.0 },
+      { name: 'Jumbo (500ml)', priceMultiplier: 1.3 },
+    ],
+  },
+  {
+    id: 'cold-3',
+    name: 'Classic Affogato al Caffe',
+    category: 'Cold Brews & Frappes',
+    price: 210,
+    description: 'Two scoops of artisan Madagascar vanilla bean gelato drowned in a freshly pulled steaming shot of espresso.',
+    image: 'https://images.unsplash.com/photo-1594631252845-29fc4cc8cde9?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    isChefSpecial: true,
+    preparationTime: '4 mins',
+    calories: 180,
+  },
+
+  // --- Specialty Teas & Chai ---
+  {
+    id: 'tea-1',
+    name: 'Royal Kashmiri Saffron Kahwa',
+    category: 'Specialty Teas & Chai',
+    price: 195,
+    description: 'Fragrant green tea simmered with authentic Kashmir saffron strands, crushed green cardamom, cinnamon, and slivered almonds.',
+    image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    isChefSpecial: true,
+    preparationTime: '6 mins',
+    calories: 45,
+  },
+  {
+    id: 'tea-2',
+    name: 'Artisan Kolkata Masala Chai',
+    category: 'Specialty Teas & Chai',
+    price: 140,
+    description: 'Rich full-bodied CTC tea brew infused with fresh grated ginger, crushed peppercorns, cloves, and boiled with fresh milk in earthen style.',
+    image: 'https://images.unsplash.com/photo-1561336313-0bd5e0b27ec8?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    isBestseller: true,
+    preparationTime: '5 mins',
+    calories: 95,
+    customizations: [
+      {
+        title: 'Sweetness',
+        type: 'single',
+        options: [
+          { name: 'Cardamom & Jaggery (Sugar-free)', additionalPrice: 15 },
+          { name: 'Normal Brown Sugar', additionalPrice: 0 },
+          { name: 'Without Sugar', additionalPrice: 0 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'tea-3',
+    name: 'Japanese Ceremonial Matcha Latte',
+    category: 'Specialty Teas & Chai',
+    price: 270,
+    description: 'Uji stone-ground matcha whisked fresh with warm silky milk and a delicate touch of organic agave nectar.',
+    image: 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    preparationTime: '6 mins',
+    calories: 120,
+    customizations: [
+      {
+        title: 'Choice of Milk',
+        type: 'single',
+        options: [
+          { name: 'Oat Milk (Recommended)', additionalPrice: 40 },
+          { name: 'Whole Dairy Milk', additionalPrice: 0 },
+          { name: 'Almond Milk', additionalPrice: 40 },
+        ],
+      },
+    ],
+  },
+
+  // --- Gourmet Sandwiches & Wraps ---
+  {
+    id: 'sandwich-1',
+    name: 'Pesto Bocconcini Sourdough Panini',
+    category: 'Gourmet Sandwiches',
+    price: 330,
+    description: 'Fresh bocconcini mozzarella, sun-ripened tomatoes, sweet basil walnut pesto, and aged balsamic glaze pressed in artisanal sourdough.',
+    image: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    isChefSpecial: true,
+    isBestseller: true,
+    preparationTime: '10-12 mins',
+    calories: 420,
+    customizations: [
+      {
+        title: 'Side Options',
+        type: 'single',
+        options: [
+          { name: 'Herb Salted French Fries', additionalPrice: 0 },
+          { name: 'Truffle Parmesan Wedges', additionalPrice: 60 },
+          { name: 'Garden Green Salad', additionalPrice: 30 },
+        ],
+      },
+      {
+        title: 'Cheese Add-on',
+        type: 'multiple',
+        options: [
+          { name: 'Extra Melted Cheddar', additionalPrice: 50 },
+          { name: 'Spicy Jalapeno Dip', additionalPrice: 30 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'sandwich-2',
+    name: 'Smoked Herb Chicken Ciabatta',
+    category: 'Gourmet Sandwiches',
+    price: 370,
+    description: 'Tender house-smoked pulled chicken breast tossed with dijon aioli, caramelized onions, crisp rocket leaves, and melted gouda.',
+    image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=800&q=80',
+    isVeg: false,
+    isBestseller: true,
+    preparationTime: '12 mins',
+    calories: 490,
+    customizations: [
+      {
+        title: 'Side Options',
+        type: 'single',
+        options: [
+          { name: 'Salted French Fries', additionalPrice: 0 },
+          { name: 'Crispy Peri Peri Fries', additionalPrice: 40 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'sandwich-3',
+    name: 'Truffled Wild Mushroom & Brie Melt',
+    category: 'Gourmet Sandwiches',
+    price: 350,
+    description: 'Sauteed shiitake and button mushrooms with thyme butter, melted French brie, and garlic emulsion on brioche toast.',
+    image: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    preparationTime: '10 mins',
+    calories: 380,
+  },
+
+  // --- Pizza & Pasta ---
+  {
+    id: 'pizza-1',
+    name: 'Margherita Burrata Rustica',
+    category: 'Pizza & Pasta',
+    price: 460,
+    description: '10-inch hand-stretched Neapolitan sourdough base, San Marzano tomato sauce, fresh buffalo burrata, virgin olive oil, and fresh basil.',
+    image: 'https://images.unsplash.com/photo-1604382355076-af4b0eb60143?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    isChefSpecial: true,
+    isBestseller: true,
+    preparationTime: '15 mins',
+    calories: 680,
+    customizations: [
+      {
+        title: 'Crust Options',
+        type: 'single',
+        options: [
+          { name: 'Neapolitan Thin Crust', additionalPrice: 0 },
+          { name: 'Cheese Burst Stuffed Edge', additionalPrice: 80 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'pizza-2',
+    name: 'Truffle Cream Fettuccine Alfredo',
+    category: 'Pizza & Pasta',
+    price: 420,
+    description: 'Handmade fresh egg fettuccine tossed in a velvet parmesan and white truffle butter cream sauce with cracked black pepper.',
+    image: 'https://images.unsplash.com/photo-1645112411341-6c4fd023714a?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    preparationTime: '12-14 mins',
+    calories: 590,
+    customizations: [
+      {
+        title: 'Protein Add-on',
+        type: 'single',
+        options: [
+          { name: 'Keep Vegetarian', additionalPrice: 0 },
+          { name: 'Add Grilled Herb Chicken', additionalPrice: 90 },
+          { name: 'Add Garlic Butter Prawns', additionalPrice: 130 },
+        ],
+      },
+    ],
+  },
+
+  // --- Bakery & Desserts ---
+  {
+    id: 'dessert-1',
+    name: 'Signature Ektu Shomoy Tiramisu',
+    category: 'Bakery & Desserts',
+    price: 290,
+    description: 'Savoiardi ladyfingers soaked in our signature espresso and rum essence, layered with whipped Italian mascarpone and Valrhona cacao.',
+    image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    isChefSpecial: true,
+    isBestseller: true,
+    preparationTime: 'Ready to serve',
+    calories: 340,
+  },
+  {
+    id: 'dessert-2',
+    name: 'Warm Belgian Chocolate Lava Cake',
+    category: 'Bakery & Desserts',
+    price: 270,
+    description: 'Freshly baked molten chocolate center cake, served steaming warm with a scoop of vanilla bean ice cream.',
+    image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    isBestseller: true,
+    preparationTime: '8 mins',
+    calories: 410,
+  },
+  {
+    id: 'dessert-3',
+    name: 'Butter Croissant with Berry Compote',
+    category: 'Bakery & Desserts',
+    price: 180,
+    description: 'Golden, flaky multi-layered French butter croissant served with whipped salted butter and raspberry-blueberry compote.',
+    image: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    preparationTime: 'Ready to serve',
+    calories: 260,
+  },
+
+  // --- Coolers & Refreshers ---
+  {
+    id: 'cooler-1',
+    name: 'Passionfruit Espresso Sparkling Tonic',
+    category: 'Coolers & Refreshers',
+    price: 240,
+    description: 'Vibrant passionfruit nectar, craft botanical tonic water, crushed ice, and a floating shot of citrusy cold espresso.',
+    image: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    isChefSpecial: true,
+    preparationTime: '4 mins',
+    calories: 85,
+  },
+  {
+    id: 'cooler-2',
+    name: 'Wild Berry & Mint Iced Fizz',
+    category: 'Coolers & Refreshers',
+    price: 210,
+    description: 'Muddled strawberries, blackberries, garden mint, fresh lime juice, and sparkling soda over crushed ice.',
+    image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=800&q=80',
+    isVeg: true,
+    preparationTime: '4 mins',
+    calories: 90,
+  },
+];
+
+export const CAFE_HIGHLIGHTS = [
+  {
+    title: 'Operating Hours',
+    value: '10:00 AM – 11:00 PM',
+    description: 'Open all 7 days for brunch, coffee dates & late night dinners',
+    icon: 'Clock',
+  },
+  {
+    title: 'Express Bill & Pay',
+    value: 'Instant Checkout',
+    description: 'Seamless UPI QR code, Cards, Net Banking & Counter pay',
+    icon: 'Zap',
+  },
+  {
+    title: 'Prime Location',
+    value: 'Easy Accessibility',
+    description: 'Convenient parking, outdoor patio garden & AC lounge',
+    icon: 'MapPin',
+  },
+  {
+    title: 'Artisan Crafted',
+    value: '100% Specialty Arabica',
+    description: 'Micro-lot ethically sourced beans roasted with passion',
+    icon: 'Coffee',
+  },
+];

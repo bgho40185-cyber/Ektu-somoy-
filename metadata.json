@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Ektu Shomoy Cafe",
+  "description": "Artisan cafe offering premium coffees, gourmet bites, and online ordering with instant bill payments. Open 10:00 AM to 11:00 PM.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,292 @@
+{
+  "entities": {
+    "order": {
+      "title": "Order",
+      "description": "Artisan cafe food & beverage order placed by a customer",
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "Unique human-readable order reference identifier"
+        },
+        "orderType": {
+          "type": "string",
+          "enum": ["dine-in", "takeaway", "delivery"],
+          "description": "Type of order delivery or dining format"
+        },
+        "customerName": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Full name of the ordering customer"
+        },
+        "customerPhone": {
+          "type": "string",
+          "maxLength": 20,
+          "description": "Contact telephone number"
+        },
+        "customerAddress": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Delivery address if applicable"
+        },
+        "tableNumber": {
+          "type": "string",
+          "maxLength": 20,
+          "description": "Dine-in table designation"
+        },
+        "pickupTime": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Expected takeaway time"
+        },
+        "specialNotes": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Cooking notes or special requests"
+        },
+        "items": {
+          "type": "array",
+          "description": "Array of ordered items with customizations"
+        },
+        "subtotal": {
+          "type": "number",
+          "description": "Gross total before discounts and taxes"
+        },
+        "discount": {
+          "type": "number",
+          "description": "Discount applied from promotional offers"
+        },
+        "couponCode": {
+          "type": "string",
+          "maxLength": 30,
+          "description": "Promotional coupon code"
+        },
+        "gst": {
+          "type": "number",
+          "description": "Government goods & services tax"
+        },
+        "serviceCharge": {
+          "type": "number",
+          "description": "Cafe service charge"
+        },
+        "deliveryFee": {
+          "type": "number",
+          "description": "Delivery fee"
+        },
+        "total": {
+          "type": "number",
+          "description": "Final payable amount in INR"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "enum": ["upi", "card", "netbanking", "counter"],
+          "description": "Payment gateway or counter method"
+        },
+        "paymentStatus": {
+          "type": "string",
+          "enum": ["paid", "pending"],
+          "description": "Settlement state of payment"
+        },
+        "transactionId": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Payment transaction or reference id"
+        },
+        "orderStatus": {
+          "type": "string",
+          "enum": ["received", "preparing", "ready", "completed"],
+          "description": "Current kitchen preparation lifecycle state"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "Firebase Auth user ID if logged in"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp or server timestamp of order creation"
+        }
+      },
+      "required": ["orderId", "orderType", "customerName", "customerPhone", "items", "total", "orderStatus"]
+    },
+    "reservation": {
+      "title": "Reservation",
+      "description": "Cafe table booking requested by a guest",
+      "type": "object",
+      "properties": {
+        "bookingId": {
+          "type": "string",
+          "description": "Unique booking reference code"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Name of primary guest"
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 20,
+          "description": "Contact number"
+        },
+        "date": {
+          "type": "string",
+          "maxLength": 20,
+          "description": "Reserved date"
+        },
+        "timeSlot": {
+          "type": "string",
+          "maxLength": 30,
+          "description": "Reserved time slot"
+        },
+        "guests": {
+          "type": "number",
+          "description": "Number of seated guests"
+        },
+        "seatingArea": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Preferred cafe zone: indoor, patio garden, etc."
+        },
+        "specialRequests": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Special anniversary or dietary requests"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["confirmed", "cancelled"],
+          "description": "Reservation status"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "Firebase Auth user ID if logged in"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when table was reserved"
+        }
+      },
+      "required": ["bookingId", "name", "phone", "date", "timeSlot", "guests", "status"]
+    },
+    "inquiry": {
+      "title": "Inquiry",
+      "description": "Customer message or management feedback inquiry",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Sender name"
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 20,
+          "description": "Sender phone number"
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Sender email"
+        },
+        "subject": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Topic or category"
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Message content"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when message was sent"
+        }
+      },
+      "required": ["name", "phone", "message"]
+    },
+    "offer": {
+      "title": "Offer",
+      "description": "Promotional deals, coupon codes, and cafe videos posted by admin",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "maxLength": 150,
+          "description": "Offer headline"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Offer description and promo details"
+        },
+        "code": {
+          "type": "string",
+          "maxLength": 30,
+          "description": "Promo coupon code"
+        },
+        "discountBadge": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Badge text like 20% OFF or Special Deal"
+        },
+        "mediaType": {
+          "type": "string",
+          "enum": ["none", "video", "image"],
+          "description": "Type of attached media"
+        },
+        "mediaUrl": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Video embed URL or promotional image link"
+        },
+        "validUntil": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Expiry or validity date"
+        },
+        "minOrder": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Minimum order condition"
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Whether offer is actively shown to customers"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when created"
+        }
+      },
+      "required": ["title", "description", "isActive"]
+    }
+  },
+  "firestore": {
+    "/orders/{orderId}": {
+      "schema": {
+        "$ref": "#/entities/order"
+      },
+      "description": "Customer cafe orders and kitchen status"
+    },
+    "/reservations/{reservationId}": {
+      "schema": {
+        "$ref": "#/entities/reservation"
+      },
+      "description": "Table bookings for dining experiences"
+    },
+    "/inquiries/{inquiryId}": {
+      "schema": {
+        "$ref": "#/entities/inquiry"
+      },
+      "description": "Guest messages, feedback, and management inquiries"
+    },
+    "/offers/{offerId}": {
+      "schema": {
+        "$ref": "#/entities/offer"
+      },
+      "description": "Promotional offers, video deals, and coupons posted by admin"
+    }
+  }
+}
