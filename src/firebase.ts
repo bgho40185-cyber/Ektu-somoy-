@@ -561,6 +561,71 @@ export function subscribeToOffers(onUpdate: (offers: CafeOffer[]) => void): () =
   );
 }
 
+// -------------------------------------------------------------
+// Live Cafe Open / Closed Status Management
+// -------------------------------------------------------------
+
+export function getInitialCafeStatus(): boolean {
+  try {
+    const saved = localStorage.getItem('es_cafe_manual_open');
+    if (saved !== null) {
+      return JSON.parse(saved);
+    }
+  } catch {
+    // fallback
+  }
+  // Default to checking regular cafe hours (10:00 AM to 11:00 PM)
+  const now = new Date();
+  const mins = now.getHours() * 60 + now.getMinutes();
+  return mins >= 600 && mins < 1380;
+}
+
+export function subscribeToCafeStatus(onUpdate: (isOpen: boolean) => void): () => void {
+  const statusDocRef = doc(db, 'settings', 'cafeStatus');
+  return onSnapshot(
+    statusDocRef,
+    (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (typeof data.isOpen === 'boolean') {
+          try {
+            localStorage.setItem('es_cafe_manual_open', JSON.stringify(data.isOpen));
+          } catch {}
+          onUpdate(data.isOpen);
+          return;
+        }
+      }
+      onUpdate(getInitialCafeStatus());
+    },
+    (err) => {
+      console.warn('Cafe status subscription note:', err);
+      onUpdate(getInitialCafeStatus());
+    }
+  );
+}
+
+export async function updateCafeStatus(isOpen: boolean, updatedBy = ADMIN_EMAIL): Promise<void> {
+  const path = 'settings/cafeStatus';
+  try {
+    localStorage.setItem('es_cafe_manual_open', JSON.stringify(isOpen));
+  } catch {}
+
+  try {
+    await setDoc(
+      doc(db, 'settings', 'cafeStatus'),
+      {
+        isOpen,
+        updatedAt: new Date().toISOString(),
+        updatedBy,
+      },
+      { merge: true }
+    );
+    console.log(`Cafe status updated to ${isOpen ? 'OPEN' : 'CLOSED'} by ${updatedBy}`);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
 // Create or Update an Offer
 export async function saveOfferDoc(offer: CafeOffer): Promise<void> {
   const path = `offers/${offer.id}`;

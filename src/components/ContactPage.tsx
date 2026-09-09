@@ -1,15 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   MapPin,
   PhoneCall,
   Mail,
   Clock,
-  Navigation,
   ExternalLink,
   Calendar,
   MessageSquare,
-  Send,
-  CheckCircle2,
   Wifi,
   PlugZap,
   Dog,
@@ -18,25 +15,14 @@ import {
   Music,
 } from 'lucide-react';
 import { CAFE_INFO } from '../data/menuData';
-import { saveInquiryToFirestore } from '../firebase';
-import { isCafeOpen } from '../utils/cafeHelpers';
+import { useCafeStatus } from '../context/CafeStatusContext';
 
 interface ContactPageProps {
   onOpenBookTable: () => void;
 }
 
 export const ContactPage: React.FC<ContactPageProps> = ({ onOpenBookTable }) => {
-  const status = isCafeOpen();
-
-  // Contact form state
-  const [formState, setFormState] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    subject: 'General Inquiry',
-    message: '',
-  });
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const { statusInfo: status } = useCafeStatus();
 
   const amenities = [
     { icon: Wifi, title: 'High-Speed WiFi', desc: 'Free gigabit fiber for digital nomads & meetings' },
@@ -46,23 +32,6 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onOpenBookTable }) => 
     { icon: BookOpen, title: 'Reading Nook', desc: 'Curated library of books, art journals & board games' },
     { icon: Music, title: 'Lo-Fi Jazz Ambiance', desc: 'Acoustic background tunes tailored for conversations' },
   ];
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitted(true);
-    saveInquiryToFirestore(formState).catch((err) => {
-      console.warn('Could not sync inquiry to Firestore:', err);
-    });
-    setTimeout(() => {
-      setFormState({
-        name: '',
-        phone: '',
-        email: '',
-        subject: 'General Inquiry',
-        message: '',
-      });
-    }, 500);
-  };
 
   return (
     <div id="contact-page" className="py-8 sm:py-14 max-w-7xl mx-auto px-4 sm:px-8 space-y-10">
@@ -224,36 +193,6 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onOpenBookTable }) => 
             </div>
           </div>
 
-          {/* Address & Navigation Card */}
-          <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#0E1015] border border-white/10 space-y-4">
-            <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-[#C29B6B]/15 text-[#C29B6B] flex items-center justify-center shrink-0">
-                <Navigation className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-sm sm:text-base font-medium text-[#E5E7EB]">
-                  {CAFE_INFO.name}
-                </h3>
-                <p className="text-xs text-zinc-400 leading-relaxed mt-1 font-light">
-                  {CAFE_INFO.address}
-                </p>
-              </div>
-            </div>
-
-            <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
-              <a
-                href={CAFE_INFO.mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 px-4 py-2.5 rounded-xl bg-[#C29B6B] hover:bg-[#B18A5A] text-black font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#C29B6B]/10 active:scale-95 transition-all"
-              >
-                <Navigation className="w-3.5 h-3.5" />
-                <span>Start Google Navigation</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-          </div>
-
           {/* Guest Amenities */}
           <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#0E1015] border border-white/10 space-y-4">
             <h4 className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[#C29B6B]">
@@ -331,86 +270,6 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onOpenBookTable }) => 
                 </a>
               </div>
             </div>
-          </div>
-
-          {/* Quick Note / Inquiry Form */}
-          <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#0E1015] border border-white/10 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm sm:text-base font-medium text-[#E5E7EB]">
-                  Send a Note to Management
-                </h3>
-                <p className="text-xs text-zinc-400 font-light mt-0.5">
-                  Private gathering bookings, barista collaborations, or feedback.
-                </p>
-              </div>
-              <MessageSquare className="w-5 h-5 text-[#C29B6B]" />
-            </div>
-
-            {isSubmitted ? (
-              <div className="p-6 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-2 animate-in fade-in">
-                <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto" />
-                <h4 className="text-sm font-medium text-[#E5E7EB]">
-                  Message Received!
-                </h4>
-                <p className="text-xs text-zinc-400 font-light">
-                  Thank you. Our cafe supervisor will reply to your phone/email shortly.
-                </p>
-                <button
-                  onClick={() => setIsSubmitted(false)}
-                  className="mt-2 text-xs text-[#C29B6B] hover:underline"
-                >
-                  Send another message
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-3 text-xs">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-zinc-400 block mb-1 font-light">Your Name *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Sourav Roy"
-                      value={formState.name}
-                      onChange={(e) => setFormState({ ...formState, name: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-[#0A0B0E] border border-white/10 text-[#E5E7EB] placeholder-zinc-600 focus:outline-none focus:border-[#C29B6B]"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-zinc-400 block mb-1 font-light">Mobile Number *</label>
-                    <input
-                      type="tel"
-                      required
-                      placeholder="+91 98765 43210"
-                      value={formState.phone}
-                      onChange={(e) => setFormState({ ...formState, phone: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-[#0A0B0E] border border-white/10 text-[#E5E7EB] placeholder-zinc-600 focus:outline-none focus:border-[#C29B6B]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-zinc-400 block mb-1 font-light">Message *</label>
-                  <textarea
-                    required
-                    rows={3}
-                    placeholder="Write your question, booking inquiry, or feedback..."
-                    value={formState.message}
-                    onChange={(e) => setFormState({ ...formState, message: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-[#0A0B0E] border border-white/10 text-[#E5E7EB] placeholder-zinc-600 focus:outline-none focus:border-[#C29B6B] resize-none"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-2.5 rounded-xl bg-[#C29B6B] hover:bg-[#B18A5A] text-black font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Send Message</span>
-                </button>
-              </form>
-            )}
           </div>
         </div>
       </div>

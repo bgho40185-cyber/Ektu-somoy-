@@ -113,5 +113,11 @@ service cloud.firestore {
         allow read, write: if true;
       }
     }
+
+    // Cafe Settings (Live Open/Closed Status)
+    match /settings/{settingId} {
+      allow get, list: if true;
+      allow create, update, delete: if true;
+    }
   }
 }

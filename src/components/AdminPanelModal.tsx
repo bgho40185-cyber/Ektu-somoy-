@@ -29,6 +29,8 @@ import {
   Camera,
   Upload,
   Loader2,
+  Search,
+  ArrowRight,
 } from 'lucide-react';
 import { OrderDetails, CafeOffer } from '../types';
 import {
@@ -57,6 +59,7 @@ import {
   cacheVideoBlobUrl,
 } from '../firebase';
 import { formatPrice } from '../utils/cafeHelpers';
+import { useCafeStatus } from '../context/CafeStatusContext';
 
 interface AdminPanelModalProps {
   isOpen: boolean;
@@ -64,8 +67,8 @@ interface AdminPanelModalProps {
   onLoggedOut: () => void;
 }
 
-type AdminTab = 'orders' | 'offers' | 'reservations' | 'inquiries';
-type OrderFilter = 'all' | 'received' | 'preparing' | 'ready' | 'completed';
+type AdminTab = 'orders' | 'offers' | 'reservations';
+type OrderFilter = 'all' | 'pending' | 'completed';
 
 // Video Player for Admin Card list supporting direct URLs and chunked videos
 const AdminCardVideoPlayer: React.FC<{ offer: CafeOffer }> = ({ offer }) => {
@@ -129,8 +132,10 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   onClose,
   onLoggedOut,
 }) => {
+  const { isOpen: isCafeOpenStatus, toggleCafeStatus, isLoading: isStatusLoading } = useCafeStatus();
   const [activeTab, setActiveTab] = useState<AdminTab>('orders');
   const [orderFilter, setOrderFilter] = useState<OrderFilter>('all');
+  const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [orders, setOrders] = useState<OrderDetails[]>([]);
   const [reservations, setReservations] = useState<ReservationData[]>([]);
   const [inquiries, setInquiries] = useState<InquiryData[]>([]);
@@ -534,222 +539,298 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Filtered orders
+  // Safe timestamp formatter avoiding Invalid Date on raw time strings or ISO dates
+  const formatOrderTimestamp = (createdAt: string | undefined) => {
+    if (!createdAt) return 'Just now';
+    const trimmed = createdAt.trim();
+    // If it's already a time string like "16:01" or "04:01 PM"
+    if (/^\d{1,2}:\d{2}(\s*(AM|PM|am|pm))?$/.test(trimmed)) {
+      return trimmed;
+    }
+    const d = new Date(trimmed);
+    if (isNaN(d.getTime())) {
+      return trimmed;
+    }
+    return `${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • ${d.toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
+  };
+
+  // Filtered orders taking into account status filter (all / pending / completed) and search query
   const filteredOrders = orders.filter((o) => {
-    if (orderFilter === 'all') return true;
-    return o.orderStatus === orderFilter;
+    if (orderFilter === 'pending' && o.orderStatus === 'completed') return false;
+    if (orderFilter === 'completed' && o.orderStatus !== 'completed') return false;
+    if (orderSearchQuery.trim()) {
+      const q = orderSearchQuery.toLowerCase();
+      const matchId = (o.orderId || '').toLowerCase().includes(q);
+      const matchName = (o.customerName || '').toLowerCase().includes(q);
+      const matchPhone = (o.customerPhone || '').toLowerCase().includes(q);
+      const matchTable = (o.tableNumber || '').toLowerCase().includes(q);
+      const matchItems = (o.items || []).some((item) => item.name.toLowerCase().includes(q));
+      return matchId || matchName || matchPhone || matchTable || matchItems;
+    }
+    return true;
   });
+
+  const orderCounts: Record<OrderFilter, number> = {
+    all: orders.length,
+    pending: orders.filter((o) => o.orderStatus !== 'completed').length,
+    completed: orders.filter((o) => o.orderStatus === 'completed').length,
+  };
 
   const totalRevenue = orders
     .filter((o) => o.paymentStatus === 'paid' || o.orderStatus === 'completed')
     .reduce((acc, curr) => acc + (curr.total || 0), 0);
 
-  const activeOrdersCount = orders.filter(
-    (o) => o.orderStatus === 'received' || o.orderStatus === 'preparing'
-  ).length;
+  const activeOrdersCount = orders.filter((o) => o.orderStatus !== 'completed').length;
 
   const activeOffersCount = offers.filter((o) => o.isActive).length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-      <div
-        id="admin-panel-modal"
-        className="relative w-full max-w-6xl max-h-[92vh] flex flex-col bg-[#0A0B0E] border border-white/10 rounded-2xl shadow-2xl overflow-hidden text-zinc-200"
-      >
-        {/* Top Gold Accent Bar */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-amber-600 via-[#C29B6B] to-amber-400" />
+    <div
+      id="admin-panel-fullpage"
+      className="fixed inset-0 z-50 w-full h-full min-h-screen flex flex-col bg-[#0A0B0E] text-zinc-200 overflow-hidden animate-in fade-in duration-200"
+    >
+      {/* Top Gold Accent Bar */}
+      <div className="h-1.5 w-full bg-gradient-to-r from-amber-600 via-[#C29B6B] to-amber-400 shrink-0" />
 
-        {/* Top Navigation Bar */}
-        <div className="px-4 sm:px-6 py-3.5 bg-zinc-950/80 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#C29B6B] flex items-center justify-center text-black font-bold text-sm shadow-md">
+        {/* Top Navigation Bar - Responsive & Clean */}
+        <div className="px-3.5 sm:px-6 py-3 bg-zinc-950 border-b border-white/10 flex items-center justify-between gap-3">
+          {/* Brand & Admin Identity */}
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#C29B6B] flex items-center justify-center text-black font-bold shadow-md shrink-0">
               <ChefHat className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2]" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-base font-medium tracking-wide text-white">
-                  Ektu Shomoy Admin Panel
+                <h2 className="text-sm sm:text-base font-semibold text-white tracking-wide truncate">
+                  Admin Control Hub
                 </h2>
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Live Sync
-                </span>
+                <button
+                  id="admin-cafe-status-toggle-btn"
+                  type="button"
+                  onClick={() => toggleCafeStatus()}
+                  disabled={isStatusLoading}
+                  title={isCafeOpenStatus ? "Cafe is currently OPEN (Click to mark Closed on Website)" : "Cafe is currently CLOSED (Click to mark Open on Website)"}
+                  className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-semibold tracking-wider transition-all duration-300 border shadow-xs cursor-pointer select-none active:scale-95 shrink-0 ${
+                    isCafeOpenStatus
+                      ? 'bg-emerald-950/60 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900/60'
+                      : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-750'
+                  }`}
+                >
+                  {/* Slider Switch Track */}
+                  <div
+                    className={`w-7 h-4 rounded-full p-0.5 transition-colors duration-300 flex items-center ${
+                      isCafeOpenStatus ? 'bg-emerald-500 justify-end' : 'bg-zinc-600 justify-start'
+                    }`}
+                  >
+                    <span
+                      className={`w-3 h-3 rounded-full bg-white shadow-xs transform transition-transform duration-300 ${
+                        isCafeOpenStatus ? 'scale-100' : 'scale-90 bg-zinc-200'
+                      }`}
+                    />
+                  </div>
+                  <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-wider">
+                    {isCafeOpenStatus ? 'OPEN' : 'CLOSED'}
+                  </span>
+                </button>
               </div>
-              <p className="text-[11px] text-zinc-400 font-mono">Admin: {ADMIN_EMAIL}</p>
+              <p className="text-[11px] text-zinc-400 font-mono truncate">
+                {ADMIN_EMAIL}
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Quick Actions Cluster */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               onClick={handleRefresh}
               disabled={isLoading}
-              className="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors disabled:opacity-50"
-              title="Refresh Firestore records"
+              className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-zinc-300 hover:text-white flex items-center gap-1.5 transition-all disabled:opacity-50 active:scale-95"
+              title="Refresh database records"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-[#C29B6B]' : ''}`} />
-              <span className="hidden sm:inline">Refresh</span>
+              <span className="hidden sm:inline font-medium">Sync</span>
             </button>
 
             <button
               onClick={handleSignOut}
-              className="px-2.5 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-xs text-red-300 hover:text-red-200 flex items-center gap-1.5 transition-colors"
-              title="Log out of Admin Portal"
+              className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-xs text-red-300 hover:text-red-200 flex items-center gap-1.5 transition-all active:scale-95"
+              title="Sign out of admin session"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Sign Out</span>
+              <span className="hidden sm:inline font-medium">Sign Out</span>
             </button>
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
-              title="Close Admin Window"
+              className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-all active:scale-95"
+              title="Close dashboard"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
 
-        {/* Action Toast */}
+        {/* Action Toast Notification */}
         {actionMessage && (
           <div className="bg-[#C29B6B] text-black px-4 py-1.5 text-xs font-semibold text-center shadow-md animate-in slide-in-from-top duration-150">
             {actionMessage}
           </div>
         )}
 
-        {/* Metrics Row */}
-        <div className="px-4 sm:px-6 py-3.5 grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 bg-zinc-900/40 border-b border-white/5">
-          <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-[#C29B6B]/15 text-[#C29B6B] flex items-center justify-center">
+        {/* Modern Interactive KPI Summary Grid */}
+        <div className="px-3.5 sm:px-6 py-2.5 sm:py-3 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 bg-zinc-950/60 border-b border-white/5">
+          {/* 1. Total Sales Card */}
+          <div className="p-2.5 sm:p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-2.5 sm:gap-3">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#C29B6B]/15 text-[#C29B6B] flex items-center justify-center shrink-0">
               <TrendingUp className="w-4 h-4" />
             </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-zinc-400">Total Sales</p>
-              <p className="text-sm sm:text-base font-light font-mono text-white">
+            <div className="min-w-0">
+              <span className="text-[10px] uppercase tracking-wider text-zinc-400 block font-medium">Total Sales</span>
+              <span className="text-xs sm:text-base font-semibold font-mono text-white truncate block">
                 {formatPrice(totalRevenue)}
-              </p>
+              </span>
             </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center">
+          {/* 2. Total Orders Card (Interactive tab switcher) */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('orders')}
+            className={`p-2.5 sm:p-3 rounded-xl border flex items-center gap-2.5 sm:gap-3 text-left transition-all hover:border-[#C29B6B]/40 active:scale-[0.99] ${
+              activeTab === 'orders'
+                ? 'bg-[#C29B6B]/10 border-[#C29B6B]/50 ring-1 ring-[#C29B6B]/30'
+                : 'bg-white/[0.02] border-white/5'
+            }`}
+          >
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0">
               <ShoppingBag className="w-4 h-4" />
             </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-zinc-400">Total Orders</p>
-              <p className="text-sm sm:text-base font-light font-mono text-white">
-                {orders.length}
+            <div className="min-w-0">
+              <span className="text-[10px] uppercase tracking-wider text-zinc-400 block font-medium">Orders</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs sm:text-base font-semibold font-mono text-white">
+                  {orders.length}
+                </span>
                 {activeOrdersCount > 0 && (
-                  <span className="ml-1 text-xs text-amber-400 font-sans">
-                    ({activeOrdersCount} pending)
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono font-medium">
+                    {activeOrdersCount} new
                   </span>
                 )}
-              </p>
+              </div>
             </div>
-          </div>
+          </button>
 
-          <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
+          {/* 3. Offers & Videos Card (Interactive tab switcher) */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('offers')}
+            className={`p-2.5 sm:p-3 rounded-xl border flex items-center gap-2.5 sm:gap-3 text-left transition-all hover:border-[#C29B6B]/40 active:scale-[0.99] ${
+              activeTab === 'offers'
+                ? 'bg-[#C29B6B]/10 border-[#C29B6B]/50 ring-1 ring-[#C29B6B]/30'
+                : 'bg-white/[0.02] border-white/5'
+            }`}
+          >
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0">
               <Tag className="w-4 h-4" />
             </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-zinc-400">Offers & Videos</p>
-              <p className="text-sm sm:text-base font-light font-mono text-white">
-                {offers.length}
-                <span className="ml-1 text-xs text-emerald-400 font-sans">
-                  ({activeOffersCount} live)
+            <div className="min-w-0">
+              <span className="text-[10px] uppercase tracking-wider text-zinc-400 block font-medium">Offers & Videos</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs sm:text-base font-semibold font-mono text-white">
+                  {offers.length}
                 </span>
-              </p>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-medium">
+                  {activeOffersCount} live
+                </span>
+              </div>
             </div>
-          </div>
+          </button>
 
-          <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-blue-500/15 text-blue-400 flex items-center justify-center">
+          {/* 4. Table Bookings Card (Interactive tab switcher) */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('reservations')}
+            className={`p-2.5 sm:p-3 rounded-xl border flex items-center gap-2.5 sm:gap-3 text-left transition-all hover:border-[#C29B6B]/40 active:scale-[0.99] ${
+              activeTab === 'reservations'
+                ? 'bg-[#C29B6B]/10 border-[#C29B6B]/50 ring-1 ring-[#C29B6B]/30'
+                : 'bg-white/[0.02] border-white/5'
+            }`}
+          >
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0">
               <Calendar className="w-4 h-4" />
             </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-zinc-400">Table Bookings</p>
-              <p className="text-sm sm:text-base font-light font-mono text-white">
+            <div className="min-w-0">
+              <span className="text-[10px] uppercase tracking-wider text-zinc-400 block font-medium">Bookings</span>
+              <span className="text-xs sm:text-base font-semibold font-mono text-white">
                 {reservations.length}
-              </p>
+              </span>
             </div>
-          </div>
+          </button>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="px-4 sm:px-6 pt-3 flex items-center justify-between border-b border-white/10 overflow-x-auto">
-          <div className="flex items-center gap-1 sm:gap-2">
+        {/* Tab Navigation Segmented Bar - Modern & Responsive */}
+        <div className="px-3.5 sm:px-6 py-2.5 bg-zinc-950 border-b border-white/10 flex items-center justify-start gap-2 overflow-x-auto scrollbar-none">
+          <div className="flex items-center gap-1.5 bg-zinc-900/90 p-1 rounded-xl border border-white/5 shrink-0">
+            {/* Orders Tab */}
             <button
               onClick={() => setActiveTab('orders')}
-              className={`px-3 py-2 text-xs font-medium border-b-2 flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 transition-all whitespace-nowrap ${
                 activeTab === 'orders'
-                  ? 'border-[#C29B6B] text-[#C29B6B]'
-                  : 'border-transparent text-zinc-400 hover:text-white'
+                  ? 'bg-[#C29B6B] text-black font-semibold shadow-md'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              <ShoppingBag className="w-3.5 h-3.5" />
-              <span>Orders ({orders.length})</span>
+              <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
+              <span>Orders</span>
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+                  activeTab === 'orders' ? 'bg-black/20 text-black' : 'bg-white/10 text-zinc-300'
+                }`}
+              >
+                {orders.length}
+              </span>
             </button>
 
+            {/* Offers & Video Deals Tab */}
             <button
               onClick={() => setActiveTab('offers')}
-              className={`px-3 py-2 text-xs font-medium border-b-2 flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 transition-all whitespace-nowrap ${
                 activeTab === 'offers'
-                  ? 'border-[#C29B6B] text-[#C29B6B]'
-                  : 'border-transparent text-zinc-400 hover:text-white'
+                  ? 'bg-[#C29B6B] text-black font-semibold shadow-md'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              <Tag className="w-3.5 h-3.5" />
-              <span>Offers & Video Deals ({offers.length})</span>
-              {activeOffersCount > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-[#C29B6B] text-black font-bold">
-                  {activeOffersCount}
-                </span>
-              )}
+              <Tag className="w-3.5 h-3.5 shrink-0" />
+              <span>Offers & Deals</span>
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+                  activeTab === 'offers' ? 'bg-black/20 text-black' : 'bg-white/10 text-zinc-300'
+                }`}
+              >
+                {offers.length}
+              </span>
             </button>
 
+            {/* Table Bookings Tab */}
             <button
               onClick={() => setActiveTab('reservations')}
-              className={`px-3 py-2 text-xs font-medium border-b-2 flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 transition-all whitespace-nowrap ${
                 activeTab === 'reservations'
-                  ? 'border-[#C29B6B] text-[#C29B6B]'
-                  : 'border-transparent text-zinc-400 hover:text-white'
+                  ? 'bg-[#C29B6B] text-black font-semibold shadow-md'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              <Calendar className="w-3.5 h-3.5" />
-              <span>Table Bookings ({reservations.length})</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('inquiries')}
-              className={`px-3 py-2 text-xs font-medium border-b-2 flex items-center gap-1.5 transition-all ${
-                activeTab === 'inquiries'
-                  ? 'border-[#C29B6B] text-[#C29B6B]'
-                  : 'border-transparent text-zinc-400 hover:text-white'
-              }`}
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span>Messages ({inquiries.length})</span>
+              <Calendar className="w-3.5 h-3.5 shrink-0" />
+              <span>Bookings</span>
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+                  activeTab === 'reservations' ? 'bg-black/20 text-black' : 'bg-white/10 text-zinc-300'
+                }`}
+              >
+                {reservations.length}
+              </span>
             </button>
           </div>
-
-          {/* Sub-filter for orders */}
-          {activeTab === 'orders' && (
-            <div className="hidden sm:flex items-center gap-1 pb-1 text-[11px]">
-              {(['all', 'received', 'preparing', 'ready', 'completed'] as OrderFilter[]).map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setOrderFilter(f)}
-                  className={`px-2 py-1 rounded-md capitalize transition-colors ${
-                    orderFilter === f
-                      ? 'bg-[#C29B6B] text-black font-semibold'
-                      : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Tab Content Panels */}
@@ -1250,88 +1331,132 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
           {/* 2. ORDERS TAB                                             */}
           {/* ========================================================= */}
           {activeTab === 'orders' && (
-            <div>
-              {/* Mobile Filter */}
-              <div className="sm:hidden flex items-center gap-1 mb-3 overflow-x-auto pb-1 text-xs">
-                {(['all', 'received', 'preparing', 'ready', 'completed'] as OrderFilter[]).map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setOrderFilter(f)}
-                    className={`px-2.5 py-1 rounded-md capitalize whitespace-nowrap ${
-                      orderFilter === f
-                        ? 'bg-[#C29B6B] text-black font-semibold'
-                        : 'bg-white/5 text-zinc-400'
-                    }`}
-                  >
-                    {f}
-                  </button>
-                ))}
+            <div className="space-y-4">
+              {/* Responsive Toolbar: Status Filter Chips & Search Bar */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-zinc-950/80 border border-white/5">
+                {/* Filter Pills with Live Counter Badges */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                  {(
+                    [
+                      { id: 'all', label: 'All Orders' },
+                      { id: 'pending', label: 'Pending' },
+                      { id: 'completed', label: 'Completed' },
+                    ] as const
+                  ).map((f) => {
+                    const isSelected = orderFilter === f.id;
+                    return (
+                      <button
+                        key={f.id}
+                        onClick={() => setOrderFilter(f.id)}
+                        className={`px-3 py-1.5 rounded-xl text-xs capitalize whitespace-nowrap flex items-center gap-1.5 transition-all ${
+                          isSelected
+                            ? 'bg-[#C29B6B] text-black font-semibold shadow-md'
+                            : 'bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        <span>{f.label}</span>
+                        <span
+                          className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+                            isSelected ? 'bg-black/20 text-black' : 'bg-white/10 text-zinc-300'
+                          }`}
+                        >
+                          {orderCounts[f.id]}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Search Bar */}
+                <div className="relative w-full sm:w-64 shrink-0">
+                  <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Search by ID, name, table..."
+                    value={orderSearchQuery}
+                    onChange={(e) => setOrderSearchQuery(e.target.value)}
+                    className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-zinc-900 border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#C29B6B] transition-colors"
+                  />
+                  {orderSearchQuery && (
+                    <button
+                      onClick={() => setOrderSearchQuery('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-0.5"
+                      title="Clear search"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
 
+              {/* Orders List / Empty State */}
               {filteredOrders.length === 0 ? (
-                <div className="text-center py-16 space-y-3">
-                  <ShoppingBag className="w-10 h-10 text-zinc-600 mx-auto" />
-                  <p className="text-sm text-zinc-400 font-light">
-                    No orders match the filter &quot;{orderFilter}&quot;.
-                  </p>
-                  <p className="text-xs text-zinc-600">
-                    When customers place orders from the menu, they appear here live.
-                  </p>
+                <div className="text-center py-16 px-4 rounded-2xl bg-zinc-950/40 border border-dashed border-white/10 space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 text-zinc-500 flex items-center justify-center mx-auto">
+                    <ShoppingBag className="w-6 h-6 stroke-[1.8]" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-white">
+                      {orderSearchQuery
+                        ? `No orders matching "${orderSearchQuery}"`
+                        : `No ${orderFilter === 'all' ? '' : orderFilter} orders found`}
+                    </h4>
+                    <p className="text-xs text-zinc-400 font-light mt-1 max-w-sm mx-auto">
+                      {orderSearchQuery
+                        ? 'Try searching with a different order ID, customer name, phone number, or menu item.'
+                        : 'When customers place orders via the website or counter, they sync here in real-time.'}
+                    </p>
+                  </div>
+                  {orderSearchQuery && (
+                    <button
+                      onClick={() => setOrderSearchQuery('')}
+                      className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-xs text-zinc-200 font-medium transition-colors"
+                    >
+                      Clear Search Filter
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
                   {filteredOrders.map((order) => {
-                    const statusColors = {
-                      received: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-                      preparing: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
-                      ready: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-                      completed: 'bg-zinc-800 text-zinc-400 border-zinc-700',
-                    };
+                    const isCompleted = order.orderStatus === 'completed';
 
                     return (
                       <div
                         key={order.orderId}
-                        className="p-4 rounded-xl bg-zinc-900/60 border border-white/10 hover:border-white/20 transition-all space-y-3"
+                        className="p-4 rounded-2xl bg-zinc-900/70 border border-white/10 hover:border-white/20 transition-all space-y-3.5"
                       >
-                        {/* Top: Order Id, Date, Dining Type, Status */}
-                        <div className="flex items-start justify-between gap-2 border-b border-white/5 pb-2.5">
+                        {/* Header: Order ID, Dining Type, Timestamp, Status Badge */}
+                        <div className="flex items-start justify-between gap-2 border-b border-white/5 pb-3">
                           <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-sm font-semibold text-white">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-mono text-sm font-bold text-white">
                                 #{order.orderId}
                               </span>
-                              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 text-zinc-300 border border-white/10 capitalize">
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/5 text-zinc-300 border border-white/10 capitalize font-medium">
                                 {order.orderType}
                                 {order.tableNumber ? ` • Table ${order.tableNumber}` : ''}
                               </span>
                             </div>
-                            <p className="text-[11px] text-zinc-400 mt-0.5 flex items-center gap-1">
+                            <p className="text-[11px] text-zinc-400 mt-1 flex items-center gap-1.5">
                               <Clock className="w-3 h-3 text-[#C29B6B]" />
-                              <span>
-                                {new Date(order.createdAt).toLocaleTimeString([], {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })}
-                                {' • '}
-                                {new Date(order.createdAt).toLocaleDateString([], {
-                                  month: 'short',
-                                  day: 'numeric',
-                                })}
-                              </span>
+                              <span>{formatOrderTimestamp(order.createdAt)}</span>
                             </p>
                           </div>
 
                           <div className="flex items-center gap-1.5">
                             <span
                               className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-medium uppercase tracking-wider border ${
-                                statusColors[order.orderStatus]
+                                isCompleted
+                                  ? 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                                  : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
                               }`}
                             >
-                              {order.orderStatus}
+                              {isCompleted ? 'Completed' : 'Pending'}
                             </span>
                             <button
                               onClick={() => handleDeleteOrder(order.orderId)}
-                              className="p-1 rounded hover:bg-red-500/10 text-zinc-500 hover:text-red-400 transition-colors"
+                              className="p-1.5 rounded-lg hover:bg-red-500/10 text-zinc-500 hover:text-red-400 transition-colors"
                               title="Delete Order"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1339,52 +1464,52 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                           </div>
                         </div>
 
-                        {/* Customer Info */}
-                        <div className="grid grid-cols-2 gap-2 text-xs bg-black/30 p-2.5 rounded-lg border border-white/5">
+                        {/* Customer Info Card */}
+                        <div className="grid grid-cols-2 gap-2 text-xs bg-black/40 p-2.5 rounded-xl border border-white/5">
                           <div>
-                            <p className="text-[10px] text-zinc-500 uppercase">Customer</p>
-                            <p className="font-medium text-white truncate">{order.customerName}</p>
+                            <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-medium">Customer</p>
+                            <p className="font-medium text-white truncate mt-0.5">{order.customerName}</p>
                           </div>
                           <div>
-                            <p className="text-[10px] text-zinc-500 uppercase">Phone</p>
+                            <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-medium">Phone</p>
                             <a
                               href={`tel:${order.customerPhone}`}
-                              className="font-medium text-[#C29B6B] hover:underline flex items-center gap-1"
+                              className="font-medium text-[#C29B6B] hover:underline flex items-center gap-1 mt-0.5"
                             >
-                              <Phone className="w-3 h-3" />
-                              {order.customerPhone}
+                              <Phone className="w-3 h-3 shrink-0" />
+                              <span className="truncate">{order.customerPhone}</span>
                             </a>
                           </div>
                           {order.customerAddress && (
-                            <div className="col-span-2 pt-1 border-t border-white/5">
-                              <p className="text-[10px] text-zinc-500 uppercase">Delivery Address</p>
-                              <p className="text-zinc-300 text-[11px] leading-tight flex items-start gap-1">
+                            <div className="col-span-2 pt-1.5 border-t border-white/5">
+                              <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-medium">Delivery Address</p>
+                              <p className="text-zinc-300 text-[11px] leading-tight flex items-start gap-1 mt-0.5">
                                 <MapPin className="w-3 h-3 text-[#C29B6B] shrink-0 mt-0.5" />
-                                {order.customerAddress}
+                                <span>{order.customerAddress}</span>
                               </p>
                             </div>
                           )}
                         </div>
 
                         {/* Ordered Items List */}
-                        <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                        <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1 scrollbar-thin">
                           {order.items.map((item, idx) => (
                             <div
                               key={idx}
                               className="flex items-center justify-between text-xs py-1 border-b border-white/5 last:border-0"
                             >
-                              <div className="flex items-center gap-2">
-                                <span className="w-5 h-5 rounded-md bg-white/5 text-zinc-300 font-mono text-[10px] flex items-center justify-center font-bold">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="w-5 h-5 rounded-md bg-[#C29B6B]/15 text-[#C29B6B] font-mono text-[10px] flex items-center justify-center font-bold shrink-0">
                                   {item.quantity}x
                                 </span>
-                                <div>
-                                  <p className="font-medium text-zinc-200">{item.name}</p>
+                                <div className="min-w-0">
+                                  <p className="font-medium text-zinc-200 truncate">{item.name}</p>
                                   {item.selectedSize && (
                                     <p className="text-[10px] text-zinc-500">Size: {item.selectedSize}</p>
                                   )}
                                 </div>
                               </div>
-                              <span className="font-mono text-zinc-400">
+                              <span className="font-mono text-zinc-300 shrink-0 font-medium">
                                 {formatPrice(item.unitPrice * item.quantity)}
                               </span>
                             </div>
@@ -1394,12 +1519,13 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                         {/* Total & Payment Details */}
                         <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs">
                           <div>
-                            <span className="text-[10px] text-zinc-500 uppercase block">Payment</span>
-                            <span className="font-mono font-medium text-zinc-300 uppercase">
-                              {order.paymentMethod} •{' '}
+                            <span className="text-[10px] text-zinc-500 uppercase tracking-wider block font-medium">Payment</span>
+                            <span className="font-mono font-medium text-zinc-300 capitalize flex items-center gap-1 mt-0.5">
+                              <span>{order.paymentMethod}</span>
+                              <span>•</span>
                               <span
                                 className={
-                                  order.paymentStatus === 'paid' ? 'text-emerald-400' : 'text-amber-400'
+                                  order.paymentStatus === 'paid' ? 'text-emerald-400 font-semibold' : 'text-amber-400 font-semibold'
                                 }
                               >
                                 {order.paymentStatus}
@@ -1408,32 +1534,29 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                           </div>
 
                           <div className="text-right">
-                            <span className="text-[10px] text-zinc-500 uppercase block">Total Bill</span>
-                            <span className="font-mono text-sm font-semibold text-[#C29B6B]">
+                            <span className="text-[10px] text-zinc-500 uppercase tracking-wider block font-medium">Total Bill</span>
+                            <span className="font-mono text-sm sm:text-base font-bold text-[#C29B6B]">
                               {formatPrice(order.total)}
                             </span>
                           </div>
                         </div>
 
-                        {/* Order Status Action Buttons */}
-                        <div className="pt-2 flex flex-wrap items-center gap-1.5 border-t border-white/5">
-                          <span className="text-[10px] text-zinc-500 uppercase font-mono mr-1">
-                            Set Status:
-                          </span>
-                          {(['received', 'preparing', 'ready', 'completed'] as OrderDetails['orderStatus'][]).map(
-                            (st) => (
-                              <button
-                                key={st}
-                                onClick={() => handleStatusChange(order.orderId, st)}
-                                className={`px-2.5 py-1 rounded text-[11px] font-medium capitalize transition-all ${
-                                  order.orderStatus === st
-                                    ? 'bg-[#C29B6B] text-black font-semibold'
-                                    : 'bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white'
-                                }`}
-                              >
-                                {st}
-                              </button>
-                            )
+                        {/* Single Action Button: Only Completed as requested */}
+                        <div className="pt-3 border-t border-white/5">
+                          {!isCompleted ? (
+                            <button
+                              type="button"
+                              onClick={() => handleStatusChange(order.orderId, 'completed')}
+                              className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 bg-[#C29B6B] hover:bg-[#b18a5a] text-black transition-all shadow-md active:scale-[0.99]"
+                            >
+                              <Check className="w-4 h-4 stroke-[2.5]" />
+                              <span>Completed</span>
+                            </button>
+                          ) : (
+                            <div className="w-full py-2.5 px-3 rounded-xl bg-zinc-800/60 border border-zinc-700/60 text-zinc-400 text-xs font-medium flex items-center justify-center gap-2">
+                              <Check className="w-4 h-4 text-emerald-400 stroke-[2.5]" />
+                              <span className="text-zinc-200 font-semibold tracking-wide">Completed</span>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -1541,62 +1664,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
               )}
             </div>
           )}
-
-          {/* ========================================================= */}
-          {/* 4. CONTACT INQUIRIES TAB                                  */}
-          {/* ========================================================= */}
-          {activeTab === 'inquiries' && (
-            <div>
-              {inquiries.length === 0 ? (
-                <div className="text-center py-16 space-y-2">
-                  <MessageSquare className="w-10 h-10 text-zinc-600 mx-auto" />
-                  <p className="text-sm text-zinc-400 font-light">No guest inquiries yet.</p>
-                  <p className="text-xs text-zinc-600">
-                    Messages submitted from the Contact page will sync here.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {inquiries.map((inq) => (
-                    <div
-                      key={inq.id}
-                      className="p-4 rounded-xl bg-zinc-900/60 border border-white/10 flex flex-col sm:flex-row sm:items-start justify-between gap-4"
-                    >
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-medium text-white">{inq.name}</h4>
-                          <span className="text-[10px] font-mono text-zinc-500">
-                            {new Date(inq.createdAt || '').toLocaleString('en-IN', {
-                              dateStyle: 'medium',
-                              timeStyle: 'short',
-                            })}
-                          </span>
-                        </div>
-                        <p className="text-xs text-zinc-400 flex items-center gap-2">
-                          <span>Phone: {inq.phone}</span>
-                          {inq.email && <span>• Email: {inq.email}</span>}
-                          {inq.subject && <span>• Topic: {inq.subject}</span>}
-                        </p>
-                        <p className="text-xs text-zinc-200 bg-black/40 p-3 rounded-lg border border-white/5 whitespace-pre-wrap">
-                          {inq.message}
-                        </p>
-                      </div>
-
-                      <button
-                        onClick={() => inq.id && handleDeleteInquiry(inq.id)}
-                        className="px-2.5 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-300 text-xs flex items-center gap-1 transition-colors self-end sm:self-start shrink-0"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Delete</span>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  };

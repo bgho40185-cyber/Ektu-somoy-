@@ -16,7 +16,6 @@ export const TableBookingModal: React.FC<TableBookingModalProps> = ({ isOpen, on
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [timeSlot, setTimeSlot] = useState('04:00 PM');
   const [guests, setGuests] = useState(2);
-  const [seatingArea, setSeatingArea] = useState('Outdoor Patio Garden');
   const [notes, setNotes] = useState('');
   const [isBooked, setIsBooked] = useState(false);
   const [bookingId, setBookingId] = useState('');
@@ -41,7 +40,7 @@ export const TableBookingModal: React.FC<TableBookingModalProps> = ({ isOpen, on
       date,
       timeSlot,
       guests,
-      seatingArea,
+      seatingArea: 'Standard',
       notes,
       status: 'confirmed',
     }).catch((err) => {
@@ -55,14 +54,9 @@ export const TableBookingModal: React.FC<TableBookingModalProps> = ({ isOpen, on
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-[#0A0B0E]">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-base sm:text-lg font-light text-[#E5E7EB]">
-                Reserve Your Table
-              </span>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono bg-[#C29B6B]/15 text-[#C29B6B] border border-[#C29B6B]/30 uppercase tracking-wider">
-                Instant Confirmation
-              </span>
-            </div>
+            <h2 className="text-base sm:text-lg font-light text-[#E5E7EB]">
+              Reserve Your Table
+            </h2>
             <p className="text-[11px] sm:text-xs text-zinc-400 mt-0.5 font-light">
               Available daily from {CAFE_INFO.openingHours}
             </p>
@@ -105,8 +99,8 @@ export const TableBookingModal: React.FC<TableBookingModalProps> = ({ isOpen, on
                 <span className="text-[#E5E7EB] font-mono">{date} at {timeSlot}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-500">Guests & Area</span>
-                <span className="text-[#E5E7EB]">{guests} Persons ({seatingArea})</span>
+                <span className="text-zinc-500">Guests</span>
+                <span className="text-[#E5E7EB]">{guests} {guests === 1 ? 'Guest' : 'Guests'}</span>
               </div>
             </div>
 
@@ -188,31 +182,6 @@ export const TableBookingModal: React.FC<TableBookingModalProps> = ({ isOpen, on
                     }`}
                   >
                     {slot}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="text-zinc-400 font-medium block mb-1">Seating Ambience</label>
-              <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-                {[
-                  { id: 'Outdoor Patio Garden', label: 'Outdoor Patio Garden' },
-                  { id: 'Indoor AC Lounge', label: 'Indoor AC Lounge' },
-                  { id: 'Espresso Bar Seating', label: 'Espresso Bar Seating' },
-                  { id: 'Co-Working Quiet Corner', label: 'Co-Working Corner' },
-                ].map((area) => (
-                  <button
-                    key={area.id}
-                    type="button"
-                    onClick={() => setSeatingArea(area.id)}
-                    className={`p-2 rounded-xl border text-left text-[11px] sm:text-xs transition-all ${
-                      seatingArea === area.id
-                        ? 'bg-[#C29B6B]/15 border-[#C29B6B] text-[#C29B6B] font-medium'
-                        : 'bg-[#0A0B0E] border-white/10 text-zinc-400 hover:text-white'
-                    }`}
-                  >
-                    {area.label}
                   </button>
                 ))}
               </div>

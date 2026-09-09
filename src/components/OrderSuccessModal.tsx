@@ -5,10 +5,8 @@ import {
   Printer,
   Coffee,
   Clock,
-  MapPin,
   X,
   Receipt,
-  ExternalLink,
 } from 'lucide-react';
 import { OrderDetails } from '../types';
 import { CAFE_INFO } from '../data/menuData';
@@ -195,10 +193,12 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
               </div>
             )}
 
-            <div className="flex justify-between">
-              <span>GST (5%)</span>
-              <span className="text-[#E5E7EB] font-mono print:text-black font-medium">{formatPrice(order.gst)}</span>
-            </div>
+            {order.gst > 0 && (
+              <div className="flex justify-between">
+                <span>GST (5%)</span>
+                <span className="text-[#E5E7EB] font-mono print:text-black font-medium">{formatPrice(order.gst)}</span>
+              </div>
+            )}
 
             {order.serviceCharge > 0 && (
               <div className="flex justify-between">
@@ -242,28 +242,15 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
             <span>Print Receipt</span>
           </button>
 
-          <div className="flex items-center gap-2">
-            <a
-              href={CAFE_INFO.mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3.5 py-2.5 rounded-xl bg-zinc-900 text-[#C29B6B] hover:text-[#D4A373] border border-white/10 text-xs font-medium flex items-center gap-1.5 transition-colors"
-            >
-              <MapPin className="w-3.5 h-3.5" />
-              <span>Cafe Map</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
-
-            <button
-              onClick={() => {
-                onClose();
-                onNewOrder();
-              }}
-              className="px-5 py-2.5 rounded-xl bg-[#C29B6B] hover:bg-[#B18A5A] text-black text-xs font-semibold uppercase tracking-widest transition-all"
-            >
-              Order More Items
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              onClose();
+              onNewOrder();
+            }}
+            className="px-6 py-2.5 rounded-xl bg-[#C29B6B] hover:bg-[#B18A5A] text-black text-xs font-semibold uppercase tracking-widest transition-all shadow-md active:scale-95"
+          >
+            Order More Items
+          </button>
         </div>
       </div>
     </div>

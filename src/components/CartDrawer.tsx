@@ -317,18 +317,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
               )}
 
-              <div className="flex justify-between">
-                <span>GST (5%)</span>
-                <span className="text-[#E5E7EB] font-mono">{formatPrice(bill.gst)}</span>
-              </div>
-
-              {bill.serviceCharge > 0 && (
-                <div className="flex justify-between">
-                  <span>Cafe Service (2.5%)</span>
-                  <span className="text-[#E5E7EB] font-mono">{formatPrice(bill.serviceCharge)}</span>
-                </div>
-              )}
-
               {bill.deliveryFee > 0 && (
                 <div className="flex justify-between">
                   <span>Delivery Fee</span>

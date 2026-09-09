@@ -67,16 +67,6 @@ export const Footer: React.FC<FooterProps> = ({
                 >
                   View Contact & Map
                 </button>
-                <span className="text-zinc-600">•</span>
-                <a
-                  href={CAFE_INFO.mapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-zinc-400 hover:text-white transition-colors text-[11px] uppercase tracking-wider"
-                >
-                  <span>Google Maps</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
               </div>
             </div>
           </div>

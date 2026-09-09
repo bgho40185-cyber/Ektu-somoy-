@@ -261,6 +261,26 @@
         }
       },
       "required": ["title", "description", "isActive"]
+    },
+    "setting": {
+      "title": "Setting",
+      "description": "Store application configuration and live flags",
+      "type": "object",
+      "properties": {
+        "isOpen": {
+          "type": "boolean",
+          "description": "Whether cafe is open for orders and visits"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when setting was updated"
+        },
+        "updatedBy": {
+          "type": "string",
+          "description": "User or admin who updated the setting"
+        }
+      },
+      "required": ["isOpen"]
     }
   },
   "firestore": {
@@ -287,6 +307,12 @@
         "$ref": "#/entities/offer"
       },
       "description": "Promotional offers, video deals, and coupons posted by admin"
+    },
+    "/settings/{settingId}": {
+      "schema": {
+        "$ref": "#/entities/setting"
+      },
+      "description": "Cafe system settings and live open/closed status"
     }
   }
 }

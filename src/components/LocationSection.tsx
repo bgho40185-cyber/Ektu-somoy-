@@ -14,10 +14,10 @@ import {
   Mail,
 } from 'lucide-react';
 import { CAFE_INFO } from '../data/menuData';
-import { isCafeOpen } from '../utils/cafeHelpers';
+import { useCafeStatus } from '../context/CafeStatusContext';
 
 export const LocationSection: React.FC = () => {
-  const status = isCafeOpen();
+  const { statusInfo: status } = useCafeStatus();
 
   const amenities = [
     { icon: Wifi, title: 'High-Speed WiFi', desc: 'Free gigabit fiber for digital nomads & meetings' },

@@ -1,7 +1,23 @@
 import { CartItem, CartItemOption, OrderType } from '../types';
 import { CAFE_INFO } from '../data/menuData';
 
-export function isCafeOpen(): { isOpen: boolean; message: string; badgeColor: string } {
+export function isCafeOpen(overrideIsOpen?: boolean | null): { isOpen: boolean; message: string; badgeColor: string } {
+  if (typeof overrideIsOpen === 'boolean') {
+    if (overrideIsOpen) {
+      return {
+        isOpen: true,
+        message: 'Open Now • Closes at 11:00 PM',
+        badgeColor: 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30',
+      };
+    } else {
+      return {
+        isOpen: false,
+        message: 'Closed Now',
+        badgeColor: 'bg-zinc-900 text-zinc-400 border-zinc-700',
+      };
+    }
+  }
+
   const now = new Date();
   const currentHour = now.getHours();
   const currentMinute = now.getMinutes();
@@ -23,13 +39,13 @@ export function isCafeOpen(): { isOpen: boolean; message: string; badgeColor: st
     return {
       isOpen: true,
       message: `Open Now • ${closingText}`,
-      badgeColor: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+      badgeColor: 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30',
     };
   } else {
     return {
       isOpen: false,
       message: 'Closed Now • Opens at 10:00 AM',
-      badgeColor: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+      badgeColor: 'bg-zinc-900 text-zinc-400 border-zinc-700',
     };
   }
 }
@@ -78,11 +94,11 @@ export function calculateBill(items: CartItem[], couponCode = '', orderType: Ord
   const discount = promo.valid ? promo.discountAmount : 0;
   const taxableAmount = Math.max(0, subtotal - discount);
 
-  // 5% Cafe GST
-  const gst = Math.round(taxableAmount * 0.05);
+  // GST removed per user request: only original menu price remains
+  const gst = 0;
 
-  // 2.5% Service Charge for Dine-in (optional gratuity in modern cafes)
-  const serviceCharge = orderType === 'dine-in' ? Math.round(taxableAmount * 0.025) : 0;
+  // Extra service surcharge removed to keep original price
+  const serviceCharge = 0;
 
   // Delivery fee for delivery orders
   const deliveryFee = orderType === 'delivery' ? (taxableAmount > 500 ? 0 : 40) : 0;
